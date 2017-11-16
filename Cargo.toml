@@ -1,0 +1,6 @@
+[package]
+name = "rustlab"
+version = "0.1.0"
+authors = ["Arthur Milliken <amilliken@gmail.com>"]
+
+[dependencies]
