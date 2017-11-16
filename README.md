@@ -1,0 +1,2 @@
+# rustlab
+experiments with rust
