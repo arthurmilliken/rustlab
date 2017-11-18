@@ -16,9 +16,16 @@ fn main() {
 
     let pool = ThreadPool::new(4);
 
+    let mut counter = 0;
+
     for stream in listener.incoming() {
+        if counter > 6 {
+            println!("main: shutting down...");
+            break;
+        }
+        counter += 1;
+
         let stream = stream.unwrap();
-        println!("connection received!");
 
         // handle_connection(stream);
         pool.execute(|| {
