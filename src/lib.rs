@@ -1,97 +1,31 @@
-use std::sync::Arc;
-use std::sync::Mutex;
-use std::sync::mpsc;
-use std::thread;
+extern crate csv;
 
-enum Message {
-    NewJob(Job),
-    Terminate,
-}
+use std::path::Path;
+use std::fs;
+use std::io;
 
-trait FnBox {
-    fn call_box(self: Box<Self>);
-}
-
-impl <F: FnOnce()> FnBox for F {
-    fn call_box(self: Box<F>) {
-        (*self)()
-    }
-}
-
-pub struct ThreadPool {
-    workers: Vec<Worker>,
-    sender: mpsc::Sender<Message>,
-}
-
-type Job = Box<FnBox + Send + 'static>;
-
-impl ThreadPool {
-    /// Create a new ThreadPool.
-    ///
-    /// The size is the number of threads in the pool.
-    ///
-    /// # Panics
-    ///
-    /// The `new` function will panic if the size is zero.
-    pub fn new(size: usize) -> ThreadPool {
-        assert!(size > 0);
-        let (sender, receiver) = mpsc::channel();
-        let receiver = Arc::new(Mutex::new(receiver));
-        let mut workers = Vec::with_capacity(size);
-        for id in 0..size {
-            workers.push(Worker::new(id, receiver.clone()));
-        }
-        ThreadPool { workers, sender }
-    }
-
-    pub fn execute<F>(&self, f: F)
-        where F: FnOnce() + Send + 'static
+pub fn read_headers(path: &str) {
+    let mut rdr = csv::Reader::from_path(path).unwrap();
     {
-        let job = Box::new(f);
-        self.sender.send(Message::NewJob(job)).unwrap();
+        let headers = rdr.headers().unwrap();
+        println!("    {:?}", headers);
     }
+    // for result in rdr.records() {
+    //     let row = result.unwrap();
+    //     println!("row: {:?}", row);
+    // }    
 }
 
-impl Drop for ThreadPool {
-    fn drop(&mut self) {
-        println!("ThreadPool: sending Terminate to all workers.");
-        for _ in &mut self.workers {
-            self.sender.send(Message::Terminate).unwrap();
+pub fn read_dir(dir: &str) -> io::Result<()> {
+    let path = Path::new(dir);
+    println!("path: {:?}", path);
+    for entry in fs::read_dir(path)? {
+        let dir = entry?;
+        if !dir.path().is_dir() {
+            let path = dir.path();
+            println!("{:?}", path.file_stem().unwrap());
+            read_headers(dir.path().to_str().unwrap());
         }
-
-        println!("ThreadPool: shutting down all workers.");
-
-        for worker in &mut self.workers {
-            println!("Shutting down worker {}", worker.id);
-            if let Some(thread) = worker.thread.take() {
-                thread.join().unwrap();
-            }
-        }
     }
-}
-
-struct Worker {
-    id: usize,
-    thread: Option<thread::JoinHandle<()>>,
-}
-
-impl Worker {
-    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Message>>>) -> Worker {
-        let thread = thread::spawn(move || {
-            loop {
-                let message = receiver.lock().unwrap().recv().unwrap();
-                match message {
-                    Message::NewJob(job) => {
-                        println!("Worker {}: received job.", id);
-                        job.call_box();
-                    },
-                    Message::Terminate => {
-                        println!("Worker {}: terminating.", id);
-                        break;
-                    },
-                }
-            }
-        });
-        Worker { id, thread: Some(thread) }
-    }
+    Ok(())
 }

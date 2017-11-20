@@ -1,0 +1,3 @@
+[submodule "KJV-database"]
+	path = KJV-database
+	url = https://github.com/robertrouse/KJV-bible-database-with-metadata-MetaV-.git
