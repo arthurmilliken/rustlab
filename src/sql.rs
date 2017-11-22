@@ -3,7 +3,7 @@ use rusqlite::*;
 // use std::path::Path;
 
 // #[derive(Debug)]
-fn main() {
+fn _main() {
     // let path = Path::new("./test.db");
     // let conn = Connection::open(path).unwrap();
     let conn = Connection::open_in_memory().unwrap();
