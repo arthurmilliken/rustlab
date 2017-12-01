@@ -1,14 +1,10 @@
 extern crate csv;
-extern crate rusqlite;
-
-use rusqlite::Connection;
-use rusqlite::types::ToSql;
 
 use std::path::Path;
 use std::fs;
 use std::io;
 
-fn load_table(path: &str, table_name: &str, conn: &Connection) {
+fn load_table(path: &str, table_name: &str) {
     let mut rdr = csv::Reader::from_path(path).unwrap();
     let mut create = format!("CREATE TABLE {} (", table_name);
     let mut insert = format!("INSERT INTO {} (", table_name);
@@ -31,30 +27,20 @@ fn load_table(path: &str, table_name: &str, conn: &Connection) {
     insert.push_str(&values.as_str());
 
     println!("{}", create);
-    conn.execute(&create.as_str(), &[]).unwrap();
     println!("{}", insert);
-    let mut stmt = conn.prepare(&insert.as_str()).unwrap();
-    for record in rdr.records() {
-        let record = record.unwrap();
-        let args = "***ARG HELP ME I NEED TO COERCE record.iter() into a &[&ToSql]!!!***";
-        stmt.execute(&args).unwrap();
-    }
-    let select = format!("SELECT * FROM {}", table_name);
-    println!("{}", select);
-    let mut rows = stmt.query(&[]).unwrap();
-    while let Some(row) = rows.next() {
-        let row = row.unwrap();
-        let mut fields: Vec<String> = Vec::new();
-        for i in 0..row.column_count() {
-            fields.push(row.get(i));
+    let mut count = 0;
+    for _ in rdr.records() {
+        // let record = record.unwrap();
+        count += 1;
+        if count % 10_000 == 0 {
+            println!("  {}", count);
         }
-        println!("{:?}", fields);
     }
-
+    let select = format!("SELECT count(*) FROM {}", table_name);
+    println!("{}", select);
 }
 
 pub fn load_tables(dir: &str) -> io::Result<()> {
-    let conn = rusqlite::Connection::open_in_memory().unwrap();
     let path = Path::new(dir);
     println!("path: {:?}", path);
     for entry in fs::read_dir(path)? {
@@ -62,7 +48,7 @@ pub fn load_tables(dir: &str) -> io::Result<()> {
         if !dir.path().is_dir() {
             let path = dir.path();
             let table_name =  path.file_stem().unwrap().to_str().unwrap();
-            load_table(&dir.path().to_str().unwrap(), &table_name, &conn);
+            load_table(&dir.path().to_str().unwrap(), &table_name);
         }
     }
     Ok(())
