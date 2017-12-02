@@ -10,12 +10,7 @@ fn main() {
         Some(arg) => {
             match arg.as_str() {
                 "hello" => println!("cmd: hello"),
-                "load" => {
-                    match lib::load_tables(BASE_DIR) {
-                        Ok(_) => println!("done!"),
-                        Err(e) => println!("{:?}", e),
-                    }
-                },
+                "load" => lib::load_tables(BASE_DIR),
                 "sql" => sql::run(),
                 _ => println!("unknown cmd: {}", arg),
             }
