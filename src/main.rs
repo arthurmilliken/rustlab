@@ -13,7 +13,7 @@ fn main() {
                 "load" => {
                     match lib::load_tables(BASE_DIR) {
                         Ok(_) => println!("done!"),
-                        Err(e) => println!("ERROR: {:?}", e),
+                        Err(e) => println!("{:?}", e),
                     }
                 },
                 "sql" => sql::run(),
