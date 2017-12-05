@@ -12,6 +12,7 @@ fn main() {
                 "hello" => println!("cmd: hello"),
                 "load" => lib::load_tables(BASE_DIR),
                 "sql" => sql::run(),
+                "iterate" => lib::iterate(),
                 _ => println!("unknown cmd: {}", arg),
             }
         }

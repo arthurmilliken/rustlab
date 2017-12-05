@@ -3,7 +3,6 @@ extern crate sqlite;
 
 use std::path::Path;
 use std::fs;
-// use std::io;
 
 fn load_table(path: &str, table_name: &str, conn: &sqlite::Connection) {
     let mut rdr = csv::Reader::from_path(path).unwrap();
@@ -35,15 +34,24 @@ fn load_table(path: &str, table_name: &str, conn: &sqlite::Connection) {
     println!("{}", insert);
     let mut stmt = conn.prepare(insert).unwrap();
     let mut count = 0;
-    for _ in rdr.records() {
-        let record = record.unwrap();
-
+    for record in rdr.records() {
         count += 1;
-        if count % 10_000 == 0 { println!("  {}", count) }
         if count > 1000 { break }
+        if count % 10_000 == 0 { println!("  {}", count) }
+
+        let record = record.unwrap();
+        stmt.reset().unwrap();
+        for (column, field) in record.iter().enumerate() {
+            stmt.bind(column + 1, field).unwrap();
+        }
+        stmt.next().unwrap();
     }
-    let select = format!("SELECT count(*) FROM {};", table_name);
+    let select = format!("SELECT count(*) as num FROM {};", table_name);
     println!("{}", select);
+    conn.iterate(select, |record| {
+        println!("  {:?}", record);
+        true
+    }).unwrap();
 }
 
 pub fn load_tables(dir: &str) {
@@ -60,3 +68,10 @@ pub fn load_tables(dir: &str) {
     }
 }
 
+pub fn iterate() {
+    let list = vec!("alpha", "beta", "gamma");
+    for (i, item) in list.iter().enumerate() {
+        println!("{}: {}", i, item);
+    }
+    // println!("{:?}", list);
+}
