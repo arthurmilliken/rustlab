@@ -5,14 +5,10 @@ mod writer;
 
 use std::fs;
 
-use self::csv::{ Reader };
-use self::sqlite::{ Connection };
-use self::writer::Writer;
-
-fn load_table(path: &str, table_name: &str, conn: &Connection) {
-  match Reader::from_path(path) {
+fn load_table(path: &str, table_name: &str, conn: &sqlite::Connection) {
+  match csv::Reader::from_path(path) {
     Ok(mut rdr) => {
-      match Writer::new(table_name, &mut rdr, conn) {
+      match writer::Writer::new(table_name, &mut rdr, conn) {
         Ok(mut writer) => {
           if let Err(e) = writer.write() {
             println!("error writing table {}: {:?}", table_name, e);

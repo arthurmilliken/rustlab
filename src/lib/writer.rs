@@ -16,8 +16,8 @@ pub struct Writer<'a> {
 
 impl<'a> Writer<'a> {
   pub fn new(table_name: &str,
-         rdr: &'a mut Reader<File>,
-         conn: &'a Connection) -> csv::Result<Writer<'a>> {
+             rdr: &'a mut Reader<File>,
+             conn: &'a Connection) -> csv::Result<Writer<'a>> {
     let mut create = format!("CREATE TABLE [{}] (", table_name);
     let mut insert = format!("INSERT INTO [{}] (", table_name);
     let mut values = format!("VALUES (");
