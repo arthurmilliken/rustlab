@@ -16,12 +16,11 @@ fn main() {
     match cmd.as_str() {
       "hello" => println!("cmd: hello"),
       "sql" => sql::run(),
-      "iterate" => lib::iterate(),
       "load" => {
         if let Some(db) = args.nth(0) {
-          lib::load_tables(BASE_DIR, db.as_str())
+          lib::load_tables(BASE_DIR, db.as_str());
         } else {
-          lib::load_tables(BASE_DIR, ":memory:"),
+          lib::load_tables(BASE_DIR, ":memory:");
         }
       },
       unknown => println!("unknown cmd: {}", unknown),

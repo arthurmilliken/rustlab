@@ -1,7 +1,6 @@
 extern crate csv;
 extern crate sqlite;
 
-use std::path::Path;
 use std::fs;
 
 fn load_table(path: &str, table_name: &str, conn: &sqlite::Connection) {
@@ -37,6 +36,7 @@ fn load_table(path: &str, table_name: &str, conn: &sqlite::Connection) {
   for record in rdr.records() {
     count += 1;
     if count % 10_000 == 0 { println!("  {}", count) }
+    if count > 1000 { break }
 
     let record = record.unwrap();
     stmt.reset().unwrap();
@@ -53,25 +53,36 @@ fn load_table(path: &str, table_name: &str, conn: &sqlite::Connection) {
   }).unwrap();
 }
 
-pub fn load_tables(dir: &str, db: &str) {
-  println!("db: {}", db);
-  let conn = sqlite::open(db).unwrap();
-  let path = Path::new(dir);
-  println!("path: {:?}", path);
-  for entry in fs::read_dir(path).unwrap() {
-    let dir = entry.unwrap();
-    if !dir.path().is_dir() {
-      let path = dir.path();
-      let table_name =  path.file_stem().unwrap().to_str().unwrap();
-      load_table(&dir.path().to_str().unwrap(), &table_name, &conn);
+pub fn load_tables(path: &str, db: &str) {
+  println!("\nload_tables():'{}':'{}'\n", path, db);
+  if let (Ok(conn), Ok(read_dir)) = (
+    sqlite::open(db), fs::read_dir(path)
+  ) {
+    for entry in read_dir {
+      match entry {
+        Ok(dir) => {
+          let path = dir.path();
+          if !path.is_dir() {
+            if let (Some(table), Some(path)) = (
+              path.file_stem().and_then(|s| s.to_str()),
+              path.to_str()
+            ) {
+              load_table(&path, &table, &conn);
+            }
+            else {
+              println!("error extracting table from path: {:?}", path);
+            }
+          }
+        },
+        Err(e) => println!("{:?}", e),
+      }
     }
+    // } else {
+    //   println!("could not read dir: {}", path);
+    // }
+
+  } else {
+    println!("could not open db: {}", db);
   }
 }
 
-pub fn iterate() {
-  let list = vec!("alpha", "beta", "gamma");
-  for (i, item) in list.iter().enumerate() {
-    println!("{}: {}", i, item);
-  }
-  println!("{:?}", list);
-}
