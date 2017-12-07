@@ -55,9 +55,7 @@ fn load_table(path: &str, table_name: &str, conn: &sqlite::Connection) {
 
 pub fn load_tables(path: &str, db: &str) {
   println!("\nload_tables():'{}':'{}'\n", path, db);
-  if let (Ok(conn), Ok(read_dir)) = (
-    sqlite::open(db), fs::read_dir(path)
-  ) {
+  if let (Ok(conn), Ok(read_dir)) = (sqlite::open(db), fs::read_dir(path)) {
     for entry in read_dir {
       match entry {
         Ok(dir) => {
@@ -77,10 +75,6 @@ pub fn load_tables(path: &str, db: &str) {
         Err(e) => println!("{:?}", e),
       }
     }
-    // } else {
-    //   println!("could not read dir: {}", path);
-    // }
-
   } else {
     println!("could not open db: {}", db);
   }
