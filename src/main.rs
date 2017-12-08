@@ -1,4 +1,3 @@
-mod lib;
 mod sql;
 
 use std::env;
@@ -14,13 +13,13 @@ fn main() {
 
   if let Some(cmd) = args.nth(0) {
     match cmd.as_str() {
-      "hello" => println!("cmd: hello"),
+      "hello" => println!("Hello, World!"),
       "sql" => sql::run(),
       "load" => {
         if let Some(db) = args.nth(0) {
-          lib::load_tables(BASE_DIR, db.as_str());
+          sql::load_tables(BASE_DIR, db.as_str());
         } else {
-          lib::load_tables(BASE_DIR, ":memory:");
+          sql::load_tables(BASE_DIR, ":memory:");
         }
       },
       unknown => println!("unknown cmd: {}", unknown),
@@ -29,5 +28,4 @@ fn main() {
     println!("usage: {} <cmd>", prog);
   }
 }
-
 // #[derive(Debug)]

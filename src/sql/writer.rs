@@ -6,6 +6,7 @@ use std::fs::File;
 use self::csv::{ Reader, StringRecord };
 use self::sqlite::{ Connection, State, Statement };
 
+// #[derive(Debug)]
 pub struct Writer<'a> {
   create: String,
   insert: String,
