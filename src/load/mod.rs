@@ -43,13 +43,16 @@ fn create_schema(table_name: &str, rdr: &mut csv::Reader<File>) -> Result<Schema
 fn load_table(name: &str, path: &str) -> Result<()> {
   let mut rdr = csv::Reader::from_path(path)?;
   let schema = create_schema(name, &mut rdr)?;
+  // TODO: execute create
   println!("{}", schema.create);
   for record in rdr.records() {
     let row = record?;
     println!("{}", schema.insert);
     println!("            {:?}", row);
+    // TODO: execute insert
   }
   println!("{}", schema.select_count);
+  // TODO: execute count
   Ok(())
 }
 
