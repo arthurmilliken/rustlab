@@ -1,7 +1,7 @@
 extern crate csv;
 extern crate rusqlite;
 
-// use self::rusqlite::types::{ ToSql };
+use self::rusqlite::types::{ ToSql };
 use std::error::Error;
 use std::fs::File;
 use std::result;
@@ -56,9 +56,9 @@ fn load_table(name: &str, path: &str) -> Result<Schema> {
   for record in rdr.records() {
     let row = record?;
     println!("{}", schema.insert);
-    let fields: Vec<&str> = row.iter().collect();
-    println!("            {:?}", fields);
-    conn.execute(&schema.insert, fields.as_slice())?; // THIS LINE FAILS
+    let params: Vec<&str> = row.iter().collect();
+    println!("            {:?}", params);
+    conn.execute(&schema.insert, params.as_slice())?; // THIS LINE FAILS
   }
   println!("{}", schema.select_count);
   let count: i32 = conn.query_row(&schema.select_count, &[], |row| { row.get(0) })?;
