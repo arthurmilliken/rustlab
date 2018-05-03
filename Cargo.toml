@@ -5,8 +5,8 @@ authors = ["Arthur Milliken <amilliken@gmail.com>"]
 
 [dependencies]
 csv = "1.0.0-beta.5"
-sqlite = "0.23.9"
+# sqlite = "0.23.9"
 
-# [dependencies.rusqlite]
-# version = "0.13.0"
-# features = ["bundled"]
+[dependencies.rusqlite]
+version = "0.13.0"
+features = ["bundled"]

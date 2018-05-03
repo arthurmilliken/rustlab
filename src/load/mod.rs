@@ -1,5 +1,7 @@
 extern crate csv;
+extern crate rusqlite;
 
+// use self::rusqlite::types::{ ToSql };
 use std::error::Error;
 use std::fs::File;
 use std::result;
@@ -12,48 +14,56 @@ type Result<T> = result::Result<T, Box<Error>>;
 struct Schema {
   create: String,
   insert: String,
+  select: String,
   select_count: String,
 }
 
-fn create_schema(table_name: &str, rdr: &mut csv::Reader<File>) -> Result<Schema> {
-  let mut create = format!("CREATE TABLE [{}] (", table_name);
-  let mut insert = format!("INSERT INTO [{}] (", table_name);
-  let mut values = format!("VALUES (");
-  let mut index = 0;
-  for field in rdr.headers()? {
-    if index > 0 {
-      create.push_str(", ");
-      insert.push_str(", ");
-      values.push_str(", ");
+impl Schema {
+  pub fn load(table_name: &str, rdr: &mut csv::Reader<File>) -> Result<Schema> {
+    let mut create = format!("CREATE TABLE [{}] (", table_name);
+    let mut insert = format!("INSERT INTO [{}] (", table_name);
+    let mut values = format!("VALUES (");
+    let mut index = 0;
+    for field in rdr.headers()? {
+      if index > 0 {
+        create.push_str(", ");
+        insert.push_str(", ");
+        values.push_str(", ");
+      }
+      index += 1;
+      create.push_str(&format!("[{}] TEXT", field));
+      insert.push_str(&format!("[{}]", field));
+      values.push_str(&format!("?{}", index));
     }
-    index += 1;
-    create.push_str(&format!("[{}] TEXT", field));
-    insert.push_str(&format!("[{}]", field));
-    values.push_str(&format!("?{}", index));
-  }
-  create.push_str(");");
-  insert.push_str(") ");
-  values.push_str(");");
-  insert.push_str(&values.as_str());
+    create.push_str(");");
+    insert.push_str(") ");
+    values.push_str(");");
+    insert.push_str(&values.as_str());
 
-  let select_count = format!("SELECT count(*) FROM [{}];", table_name);
-  Ok(Schema { create, insert, select_count })
+    let select = format!("SELECT * FROM [{}];", table_name);
+    let select_count = format!("SELECT count(*) FROM [{}];", table_name);
+    Ok(Schema { create, insert, select, select_count })
+  }
 }
 
-fn load_table(name: &str, path: &str) -> Result<()> {
+fn load_table(name: &str, path: &str) -> Result<Schema> {
   let mut rdr = csv::Reader::from_path(path)?;
-  let schema = create_schema(name, &mut rdr)?;
-  // TODO: execute create
+  let schema = Schema::load(name, &mut rdr)?;
+
+  let conn = rusqlite::Connection::open_in_memory()?;
   println!("{}", schema.create);
+  conn.execute(&schema.create, &[])?;
   for record in rdr.records() {
     let row = record?;
     println!("{}", schema.insert);
-    println!("            {:?}", row);
-    // TODO: execute insert
+    let fields: Vec<&str> = row.iter().collect();
+    println!("            {:?}", fields);
+    conn.execute(&schema.insert, fields.as_slice())?; // THIS LINE FAILS
   }
   println!("{}", schema.select_count);
-  // TODO: execute count
-  Ok(())
+  let count: i32 = conn.query_row(&schema.select_count, &[], |row| { row.get(0) })?;
+  println!("count: {:?}", count);
+  Ok(schema)
 }
 
 pub fn run() {
