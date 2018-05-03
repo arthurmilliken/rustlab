@@ -1,7 +1,7 @@
-mod load;
+mod sql;
 use std::env;
 
-// const BASE_DIR: &str = "./KJV-database/CSV/";
+const BASE_DIR: &str = "./KJV-database/CSV/";
 
 fn main() {
   let mut args = env::args();
@@ -13,7 +13,8 @@ fn main() {
   if let Some(cmd) = args.nth(0) {
     match cmd.as_str() {
       "hello" => println!("Hello, World!"),
-      "load" => load::run(),
+      "run" => sql::run(),
+      "load" => sql::load_tables(BASE_DIR, ":memory:"),
       unknown => println!("unknown cmd: {}", unknown),
     }
   } else {
